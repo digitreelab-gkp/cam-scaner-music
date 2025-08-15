@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ScanSeq — Motion + Right‑Side GIF Overlay</title>
+  <title>DigiTreeLabs — ScanSeq (Original-style)</title>
   <script src="https://unpkg.com/p5@1.9.3/lib/p5.min.js"></script>
   <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
   <style>
@@ -12,34 +12,34 @@
     body{ margin:0; background:#0b0f14; color:var(--fg); font:500 15px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; }
     .wrap{ max-width:1200px; margin:24px auto; padding:0 16px; }
     .panel{ background:#0f1520; border-radius:16px; padding:16px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .brand{ display:flex; align-items:baseline; gap:10px; margin:0 0 6px }
+    .brand .tag{ font-size:12px; color:#94a3b8; border:1px solid #243045; padding:2px 8px; border-radius:999px }
     .row{ display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; margin:10px 0 }
-    .controls{ display:grid; grid-template-columns: repeat(3, minmax(220px,1fr)); gap:10px }
+    .controls{ display:grid; grid-template-columns: repeat(2, minmax(220px,1fr)); gap:10px }
     .controls .row{ grid-template-columns: 1fr 1fr }
     button{ background:linear-gradient(135deg, #7c3aed, #5eead4); color:#0b0f14; border:none; padding:10px 12px; font-weight:800; border-radius:12px; cursor:pointer }
     .muted{ color:var(--muted) }
     #diag{ white-space:pre-wrap; background:#0c1220; border:1px solid #22304a; color:#d1e7ff; padding:10px; border-radius:10px; min-height:60px; margin-top:8px }
     #p5-holder canvas{ width:100%; height:auto; display:block; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.35) }
-    .inline{ display:flex; gap:8px; align-items:center }
-    input[type="url"], input[type="text"]{ background:#0b1120; border:1px solid #1f2a44; color:#dbeafe; border-radius:10px; padding:8px 10px }
-    select, input[type="range"], input[type="checkbox"]{ accent-color:#7c3aed }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="panel">
-      <h2 style="margin:0 0 6px">Scan Sequencer — camera → notes + Right GIF Overlay</h2>
-      <p class="muted">Left panel is the <b>sensing</b> area (we read the rightmost ~80px). Motion spawns dots that travel right and play at the wavy line. Now you can add a <b>dancing anime GIF</b> on the right panel (behind or in front of the stripes).</p>
+      <div class="brand">
+        <h2 style="margin:0">DigiTreeLabs — Scan Sequencer (camera → notes)</h2>
+        <span class="tag">Original feel + right-side GIF</span>
+      </div>
+      <p class="muted">Left panel is the camera <i>sensing</i> area. Right panel shows stripes & dots. A dot spawns when motion is detected at the boundary, moves right, and <i>plays</i> when it crosses the wavy line. A dancing GIF is shown on the right for a beautiful overlay.</p>
 
       <div class="controls">
         <div class="row"><label>Start audio</label><button id="btnStart">Start</button></div>
         <div class="row"><label>Speed</label><input id="speed" type="range" min="1" max="20" step="1" value="8"></div>
         <div class="row"><label>Motion threshold</label><input id="mthr" type="range" min="5" max="100" step="1" value="40"></div>
-
-        <div class="row"><label>Mirror source</label><input id="mirror" type="checkbox" checked></div>
-        <div class="row"><label>Master volume (dB)</label><input id="vol" type="range" min="-36" max="0" step="1" value="-10"></div>
+        <div class="row"><label>Mirror webcam</label><input id="mirror" type="checkbox" checked></div>
+        <div class="row"><label>Master volume (dB)</label><input id="vol" type="range" min="-36" max="0" step="1" value="-12"></div>
         <div class="row"><label>BPM</label><input id="bpm" type="range" min="60" max="160" step="1" value="104"></div>
-
-        <div class="row"><label>Groove (predefined)</label><input id="groove" type="checkbox"></div>
+        <div class="row"><label>Groove (predefined notes)</label><input id="groove" type="checkbox"></div>
         <div class="row"><label>Pattern</label>
           <select id="grooveSel">
             <option value="off" selected>Off (camera only)</option>
@@ -48,40 +48,6 @@
             <option value="pentajam">Pentatonic Jam</option>
           </select>
         </div>
-
-        <div class="row"><label>Instrument</label>
-          <select id="instrument">
-            <option value="pluck">Pluck</option>
-            <option value="synth" selected>Synth</option>
-            <option value="fm">FM</option>
-            <option value="am">AM</option>
-            <option value="duo">Duo</option>
-          </select>
-        </div>
-        <div class="row"><label>Note mode</label>
-          <select id="notemode">
-            <option value="single" selected>Single</option>
-            <option value="oct">Octaves</option>
-            <option value="fifth">Power (1+5)</option>
-            <option value="maj">Triad Major</option>
-            <option value="min">Triad Minor</option>
-          </select>
-        </div>
-        <div class="row"><label>Note length</label><input id="notelen" type="range" min="0.05" max="0.6" step="0.01" value="0.18"></div>
-        <div class="row"><label>Delay wet</label><input id="delaywet" type="range" min="0" max="1" step="0.01" value="0.35"></div>
-        <div class="row"><label>Reverb wet</label><input id="revwet" type="range" min="0" max="1" step="0.01" value="0.2"></div>
-
-        <!-- New: Right‑side GIF overlay controls -->
-        <div class="row"><label>Right GIF URL</label><span class="inline"><input id="gifUrl" type="url" placeholder="https://example.com/dancing.gif" style="min-width:260px"><button id="gifLoad">Load GIF</button></span></div>
-        <div class="row"><label>GIF Opacity</label><input id="gifAlpha" type="range" min="0" max="1" step="0.01" value="0.6"></div>
-        <div class="row"><label>GIF Scale</label><input id="gifScale" type="range" min="0.25" max="2" step="0.01" value="1.0"></div>
-        <div class="row"><label>Place GIF</label>
-          <select id="gifPlace">
-            <option value="behind" selected>Behind stripes</option>
-            <option value="front">In front of stripes</option>
-          </select>
-        </div>
-
         <div class="row"><label>Snapshot</label><button id="btnSnap">Save PNG</button></div>
       </div>
 
@@ -92,125 +58,125 @@
 
 <script>
 (() => {
+  const DEFAULT_GIF_URL = 'https://c.tenor.com/Ynm40n9fwNMAAAAd/tenor.gif';
+
   const el = id => document.getElementById(id);
   const println = (m)=>{ const out=el('diag'); out.textContent += (out.textContent?'\n':'') + m; };
-
-  // UI
   const btnStart = el('btnStart');
   const btnSnap  = el('btnSnap');
   const speed    = el('speed');
   const mthr     = el('mthr');
   const mirror   = el('mirror');
-  const volSlider= el('vol');
-  const bpmSlider= el('bpm');
-  const grooveChk= el('groove');
-  const grooveSel= el('grooveSel');
-  const instrSel = el('instrument');
-  const noteModeSel = el('notemode');
-  const noteLen  = el('notelen');
-  const delayWet = el('delaywet');
-  const revWet   = el('revwet');
+  const volSlider = el('vol');
+  const bpmSlider = el('bpm');
+  const grooveChk = el('groove');
+  const grooveSel = el('grooveSel');
 
-  const gifUrl   = el('gifUrl');
-  const gifLoad  = el('gifLoad');
-  const gifAlpha = el('gifAlpha');
-  const gifScale = el('gifScale');
-  const gifPlace = el('gifPlace');
-
-  // ===== Tone.js: instruments, FX, grooves =====
-  let started=false, polySynth, delay, reverb, vol, seq, currentInstr='synth';
-
+  // ===== Tone.js (pluckier voice, closer to original) =====
+  let started=false, polySynth, delay, reverb, vol, seq;
   function buildSynth(){
-    if(polySynth) polySynth.dispose(); if(delay) delay.dispose(); if(reverb) reverb.dispose(); if(vol) vol.dispose();
-    if(seq){ seq.dispose(); seq=null; }
-
-    currentInstr = instrSel.value;
-    let Voice = Tone.Synth; let opts={};
-    if(currentInstr==='pluck'){ Voice = Tone.PluckSynth; opts={}; }
-    else if(currentInstr==='fm'){ Voice = Tone.FMSynth; opts={ modulationIndex:12, envelope:{attack:0.005, decay:0.2, sustain:0.1, release:0.2} }; }
-    else if(currentInstr==='am'){ Voice = Tone.AMSynth; opts={ envelope:{attack:0.003, decay:0.2, sustain:0.05, release:0.2} }; }
-    else if(currentInstr==='duo'){ Voice = Tone.DuoSynth; opts={ harmonicity:1.5, vibratoAmount:0.02 }; }
-    else { Voice = Tone.Synth; opts={ oscillator:{partials:[0,2,3,4]}, envelope:{attack:0.002, decay:0.12, sustain:0.0, release:0.2} }; }
-
-    delay  = new Tone.FeedbackDelay("16n", 0.4); delay.wet.value = parseFloat(delayWet.value);
-    reverb = new Tone.JCReverb(0.2);         reverb.wet.value = parseFloat(revWet.value);
-    polySynth = new Tone.PolySynth(Voice, opts);
+    if(polySynth) polySynth.dispose(); if(delay) delay.dispose(); if(reverb) reverb.dispose(); if(vol) vol.dispose(); if(seq) {seq.dispose(); seq=null;}
+    reverb = new Tone.JCReverb(0.2);
+    delay  = new Tone.FeedbackDelay("16n", 0.4);
+    polySynth = new Tone.PolySynth(Tone.Synth, { oscillator:{ partials:[0,2,3,4] } });
     vol = new Tone.Volume(parseInt(volSlider.value,10));
     polySynth.chain(vol, delay, reverb, Tone.Destination);
 
     Tone.Transport.bpm.value = parseInt(bpmSlider.value,10);
-    seq = new Tone.Sequence((time, step)=>{ if(!grooveChk.checked) return; playGrooveStep(step, time); }, [...Array(16).keys()], '16n');
+
+    // 16-step sequence for predefined grooves
+    seq = new Tone.Sequence((time, step)=>{
+      if(!grooveChk.checked) return;
+      playGrooveStep(step, time);
+    }, [...Array(16).keys()], '16n');
     seq.start(0);
   }
-
   async function startAudio(){
-    if(started) return;
-    await Tone.start(); if(Tone.getContext().state!=='running') await Tone.getContext().resume();
-    buildSynth(); started=true; btnStart.textContent='Running ✓'; btnStart.disabled=true; println('🎧 Audio started');
-  }
+    if(started) return; await Tone.start(); if(Tone.getContext().state!=='running') await Tone.getContext().resume(); buildSynth(); started=true; btnStart.textContent='Running ✓'; btnStart.disabled=true; println('🎧 Audio started'); }
   btnStart.addEventListener('click', startAudio);
-  instrSel.addEventListener('change', ()=>{ if(started) buildSynth(); });
-  delayWet.addEventListener('input', ()=>{ if(delay) delay.wet.value = parseFloat(delayWet.value); });
-  revWet.addEventListener('input', ()=>{ if(reverb) reverb.wet.value = parseFloat(revWet.value); });
+
+  // react to slider changes
   volSlider.addEventListener('input', ()=>{ if(vol) vol.volume.value = parseInt(volSlider.value,10); });
   bpmSlider.addEventListener('input', ()=>{ Tone.Transport.bpm.value = parseInt(bpmSlider.value,10); });
 
-  // expand note to chord/octaves based on UI
-  function triggerNotes(baseNote, time){
-    const mode = noteModeSel.value; const dur = parseFloat(noteLen.value);
-    const offsets = (mode==='single')? [0]
-      : (mode==='oct')? [0,12]
-      : (mode==='fifth')? [0,7]
-      : (mode==='maj')? [0,4,7]
-      : (mode==='min')? [0,3,7] : [0];
-    const notes = offsets.map(semi=>Tone.Frequency(baseNote).transpose(semi).toNote());
-    notes.forEach(n=> polySynth && polySynth.triggerAttackRelease(n, dur, time, 0.95));
-  }
-
-  // simple preset grooves; call into sketch via __laneTrigger
+  // predefined groove helper (uses globals created inside p5 sketch; keep same behavior)
   function playGrooveStep(step, time){
-    const pat = grooveSel.value; const lanes = [];
-    if(pat==='arp'){ lanes.push(step % 8 + 6); }
-    else if(pat==='backbeat'){ if(step%4===0) lanes.push(4,9,14); }
-    else if(pat==='pentajam'){ const map=[6,8,11,13,15,13,11,8]; lanes.push(map[step%map.length]); }
-    for(const i of lanes){ if(window._laneTrigger) window._laneTrigger(i, time); }
+    const pat = grooveSel.value;
+    const lanes = [];
+    if(pat === 'arp'){ lanes.push(step % 8 + 6); }
+    else if(pat === 'backbeat'){ if(step%4===0) lanes.push(4,9,14); }
+    else if(pat === 'pentajam'){
+      const map=[6,8,11,13,15,13,11,8]; lanes.push(map[step%map.length]);
+    }
+    // fire lanes
+    for(const i of lanes){
+      // visual dot (vars come from p5 sketch scope via global window refs set below)
+      if(window._scan && window.scan.laneKick) window._scan.laneKick(i);
+      // sound
+      if(started && polySynth && window._scan && window._scan.noteForLane){
+        const note = window.__scan.noteForLane(i);
+        polySynth.triggerAttackRelease(note, '16n', time, 1.0);
+      }
+    }
   }
 
-  // ===== p5 sketch: original-like motion + GIF overlay on right =====
+  // ===== p5 sketch (original-like pipeline + RIGHT GIF overlay) =====
   const sketch = (p) => {
-    const lineNum = 20; let capture, gfx, buff;
-    const W=960, H=540; const cameraScreenRatio = H/240; const startPostion = 80 * cameraScreenRatio;
+    const lineNum = 20;                 // number of lanes
+    let capture, gfx;                    // camera + offscreen
+    let buff;                            // 80px sensing strip
+    const W=960, H=540;                  // main canvas
+    let cameraScreenRatio = H/240;       // scale factor from 240px camera height
+    let startPostion = 80 * cameraScreenRatio; // left panel width in canvas px
 
     // lane state
     let linesColor=[], linesXPos=[], linesMovSpeed=[], linesTrigger=[], linesToneTrigger=[], linesOldSum=[];
     let waveMoving=[], waveMovingFactor=[], waveMovingSpeed=[], waveMovingDec=[];
 
     // notes (top -> high, bottom -> low)
-    const noteListWhole = ["C3","E3","D3","G#4","F#4","C4","A#4","D4","F#4","E4","A#4","G#4","D5","C5","F#5","E5","A#5","G#5","C6","D6"];
+    const noteListWhole = [
+      "C3","E3","D3","G#4","F#4","C4","A#4","D4","F#4","E4",
+      "A#4","G#4","D5","C5","F#5","E5","A#5","G#5","C6","D6"
+    ];
 
-    // Right GIF overlay
-    let rightGif=null, rightGifReady=false;
-    gifLoad.addEventListener('click', ()=>{
-      if(!gifUrl.value) return; rightGifReady=false;
-      rightGif = p.loadImage(gifUrl.value, ()=>{ rightGifReady=true; println('🖼 Right GIF loaded'); }, (e)=>{ println('⚠ GIF load failed'); });
-    });
+    // RIGHT-SIDE GIF overlay (preloaded)
+    let rightGif = null, rightGifReady = false;
+
+    p.preload = () => {
+      rightGif = p.loadImage(DEFAULT_GIF_URL, () => { rightGifReady = true; }, () => { rightGifReady = false; });
+    };
 
     p.setup = () => {
       const c=p.createCanvas(W,H); c.parent('p5-holder'); p.pixelDensity(1);
-      capture = p.createCapture({ video:true, audio:false }); capture.size(320,240); capture.hide();
-      gfx = p.createGraphics(320,240); buff = p.createImage(80,240);
-      for(let i=0;i<lineNum;i++){ linesXPos[i]=startPostion; linesMovSpeed[i]=0.0; linesTrigger[i]=false; linesToneTrigger[i]=false; linesOldSum[i]=0.0; waveMoving[i]=false; waveMovingFactor[i]=0.0; waveMovingSpeed[i]=0.0; waveMovingDec[i]=0.0; linesColor[i]=[200,200,200,255]; }
-      println('📷 Camera ready. Add a GIF URL to decorate the right panel.');
+      capture = p.createCapture({ video:true, audio:false });
+      capture.size(320,240); capture.hide();
+      gfx = p.createGraphics(320,240);
+      buff = p.createImage(80,240);
+
+      for(let i=0;i<lineNum;i++){
+        linesXPos[i]=startPostion; linesMovSpeed[i]=0.0; linesTrigger[i]=false; linesToneTrigger[i]=false; linesOldSum[i]=0.0;
+        waveMoving[i]=false; waveMovingFactor[i]=0.0; waveMovingSpeed[i]=0.0; waveMovingDec[i]=0.0;
+        linesColor[i]=[200,200,200,255];
+      }
+      println('📷 Camera ready. Right panel shows stripes + dancing GIF.');
+      // expose a tiny API for the groove helper
+      window.__scan = {
+        laneKick: (i)=>{
+          if(i<0||i>=lineNum) return;
+          linesXPos[i]=startPostion; linesMovSpeed[i]=5 + parseInt(speed.value,10)*0.8; linesTrigger[i]=true; linesToneTrigger[i]=false; waveMoving[i]=true;
+        },
+        noteForLane: (i)=> noteListWhole[19 - i]
+      };
     };
 
-    function sourceToGfx(){ gfx.image(capture,0,0,320,240); }
-
-    // copy rightmost 80px of gfx into buff (mirrored for sensing)
+    // copy rightmost 80px of capture into buff (mirrored so boundary matches)
     function buffImageUpdate(){
-      sourceToGfx(); gfx.loadPixels(); buff.loadPixels();
+      gfx.image(capture, 0, 0, 320, 240);
+      gfx.loadPixels(); buff.loadPixels();
       for(let y=0;y<240;y++){
         for(let x=0;x<80;x++){
-          const srcX = 319 - x; const idx = (y*320 + srcX)*4;
+          const srcX = 319 - x; // right edge of camera
+          const idx = (y*320 + srcX)*4;
           buff.pixels[(y*80 + x)*4 + 0] = gfx.pixels[idx+0];
           buff.pixels[(y*80 + x)*4 + 1] = gfx.pixels[idx+1];
           buff.pixels[(y*80 + x)*4 + 2] = gfx.pixels[idx+2];
@@ -220,55 +186,145 @@
       buff.updatePixels();
     }
 
-    function lineColorCapture(){ gfx.loadPixels(); for(let i=0;i<lineNum;i++){ const py=Math.floor((i+0.5)*240/lineNum); const px=320-80; const idx=(py*320+px)*4; linesColor[i]=[gfx.pixels[idx+0],gfx.pixels[idx+1],gfx.pixels[idx+2],255]; } }
+    // update lane color from capture (one sample per lane)
+    function lineColorCapture(){
+      gfx.loadPixels();
+      for(let i=0;i<lineNum;i++){
+        const py = Math.floor((i+0.5)*240/lineNum);
+        const px = 320 - 80; // just inside the boundary
+        const idx = (py*320 + px)*4;
+        linesColor[i] = [ gfx.pixels[idx+0], gfx.pixels[idx+1], gfx.pixels[idx+2], 255 ];
+      }
+    }
 
-    function pathLineDraw(){ p.push(); for(let i=0;i<lineNum;i++){ p.stroke(linesColor[i][0],linesColor[i][1],linesColor[i][2],220); p.strokeWeight((H/lineNum)*0.5); const y=(i+0.5)*H/lineNum; p.line(startPostion,y,W,y);} p.pop(); }
+    // draw colored horizontal paths (right panel)
+    function pathLineDraw(){
+      p.push();
+      for(let i=0;i<lineNum;i++){
+        p.stroke(linesColor[i][0],linesColor[i][1],linesColor[i][2], 220);
+        p.strokeWeight((H/lineNum)*0.5);
+        const y = (i+0.5)*H/lineNum;
+        p.line(startPostion, y, W, y);
+      }
+      p.pop();
+    }
 
-    function ellipseMoving(){ p.push(); p.noStroke(); for(let i=0;i<lineNum;i++){ linesXPos[i]+=linesMovSpeed[i]; const inv=[255-linesColor[i][0],255-linesColor[i][1],255-linesColor[i][2]]; p.fill(inv[0],inv[1],inv[2]); p.circle(linesXPos[i],(i+0.5)*H/lineNum,10);} p.pop(); }
+    function ellipseMoving(){
+      p.push(); p.noStroke();
+      for(let i=0;i<lineNum;i++){
+        linesXPos[i] += linesMovSpeed[i];
+        const inv = [255-linesColor[i][0], 255-linesColor[i][1], 255-linesColor[i][2]];
+        p.fill(inv[0],inv[1],inv[2]);
+        p.circle(linesXPos[i], (i+0.5)*H/lineNum, 10);
+      }
+      p.pop();
+    }
 
-    function waveLineDraw(){ p.push(); p.stroke(255,180); p.strokeWeight(2); p.noFill(); p.beginShape(); p.curveVertex((W+startPostion)*0.5,0); p.curveVertex((W+startPostion)*0.5,0); for(let i=0;i<lineNum;i++){ if(waveMoving[i]){ waveMovingSpeed[i]=0.7; waveMoving[i]=false; waveMovingFactor[i]=0.0; waveMovingDec[i]=1.0; } waveMovingFactor[i]+=waveMovingSpeed[i]; waveMovingDec[i]=0.96; const wiggle=Math.sin(waveMovingFactor[i])*0.5*waveMovingDec[i]*30.0; p.curveVertex((W+startPostion)*0.5+wiggle,(i+0.5)*H/lineNum);} p.curveVertex((W+startPostion)*0.5,H); p.curveVertex((W+startPostion)*0.5,H); p.endShape(); p.pop(); }
+    function waveLineDraw(){
+      p.push();
+      p.stroke(255,180); p.strokeWeight(2); p.noFill();
+      p.beginShape();
+      p.curveVertex((W+startPostion)*0.5, 0);
+      p.curveVertex((W+startPostion)*0.5, 0);
+      for(let i=0;i<lineNum;i++){
+        if(waveMoving[i]){ waveMovingSpeed[i]=0.7; waveMoving[i]=false; waveMovingFactor[i]=0.0; waveMovingDec[i]=1.0; }
+        waveMovingFactor[i]+=waveMovingSpeed[i]; waveMovingDec[i]*=0.96;
+        const wiggle = Math.sin(waveMovingFactor[i]) * 0.5 * waveMovingDec[i] * 30.0;
+        p.curveVertex((W+startPostion)*0.5 + wiggle, (i+0.5)*H/lineNum);
+      }
+      p.curveVertex((W+startPostion)*0.5, H);
+      p.curveVertex((W+startPostion)*0.5, H);
+      p.endShape();
+      p.pop();
+    }
 
-    function trigger(){ const diffThr=parseInt(mthr.value,10); for(let i=0;i<lineNum;i++){ const avg=(linesColor[i][0]+linesColor[i][1]+linesColor[i][2])/3.0; const diff=Math.abs(avg-linesOldSum[i]); if(diff>diffThr){ linesToneTrigger[i]=false; linesTrigger[i]=true; } linesOldSum[i]=avg; if(linesXPos[i]>(W+startPostion)*0.5 && linesToneTrigger[i]===false){ waveMoving[i]=true; linesToneTrigger[i]=true; if(started&&polySynth){ const base=noteListWhole[19-i]; triggerNotes(base, undefined);} } if(linesXPos[i]>W){ linesXPos[i]=startPostion; linesTrigger[i]=false; linesToneTrigger[i]=true; linesMovSpeed[i]=0.0; } if(linesTrigger[i]){ const spd=parseInt(speed.value,10); linesMovSpeed[i]=5+spd*0.8; } else { linesXPos[i]=startPostion; linesMovSpeed[i]=0.0; } } }
+    // motion → trigger state + tone decision
+    function trigger(){
+      const diffThr = parseInt(mthr.value,10);
+      for(let i=0;i<lineNum;i++){
+        const avg = (linesColor[i][0] + linesColor[i][1] + linesColor[i][2]) / 3.0;
+        const diff = Math.abs(avg - linesOldSum[i]);
+        if(diff > diffThr){
+          linesToneTrigger[i] = false;   // re-arm tone
+          linesTrigger[i] = true;        // start a dot from boundary
+        }
+        linesOldSum[i] = avg;
+
+        // play once when crossing center
+        if(linesXPos[i] > (W + startPostion) * 0.5 && linesToneTrigger[i] === false){
+          waveMoving[i] = true;
+          linesToneTrigger[i] = true;
+          if(started && polySynth){
+            try{ polySynth.triggerAttackRelease(noteListWhole[19 - i], "32t", undefined, 0.9); }catch(e){ println('tone error: '+e); }
+          }
+        }
+
+        // reset dot when off the right side
+        if(linesXPos[i] > W){
+          linesXPos[i] = startPostion; linesTrigger[i] = false; linesToneTrigger[i] = true; linesMovSpeed[i]=0.0;
+        }
+
+        // give motion/inertia when triggered; otherwise keep at boundary
+        if(linesTrigger[i]){
+          const spd = parseInt(speed.value,10);
+          linesMovSpeed[i] = 5 + spd*0.8; // tuneable
+        } else {
+          linesXPos[i] = startPostion; linesMovSpeed[i] = 0.0;
+        }
+      }
+    }
+
+    // helper: draw GIF centered in the right panel with preserved aspect ratio
+    function drawRightGif(opacity = 0.7){
+      if(!rightGifReady) return;
+      const rightX = startPostion, rightW = W - startPostion, rightH = H;
+      const wr = rightW / rightGif.width;
+      const hr = rightH / rightGif.height;
+      const s = Math.min(wr, hr); // contain
+      const gw = rightGif.width * s;
+      const gh = rightGif.height * s;
+      const gx = rightX + (rightW - gw)/2;
+      const gy = (rightH - gh)/2;
+      p.push();
+      p.tint(255, Math.floor(opacity * 255));
+      p.image(rightGif, gx, gy, gw, gh);
+      p.pop();
+    }
 
     p.draw = () => {
       p.background(0);
-      // sensing
-      buffImageUpdate(); lineColorCapture(); trigger();
 
-      // left panel (sensing strip)
+      // webcam → buff (80px) and lane colors
+      buffImageUpdate();
+      lineColorCapture();
+      trigger();
+
+      // left: show sensing strip scaled up; mirror if requested
+      p.push();
+      if(mirror.checked){ p.translate(startPostion,0); p.scale(-1,1); }
       p.image(buff, 0, 0, startPostion, 240*cameraScreenRatio);
+      p.pop();
 
-      const rightX=startPostion, rightW=W-startPostion, rightH=H;
+      // RIGHT GIF behind content
+      drawRightGif(0.7);
 
-      // OPTIONAL: draw GIF behind stripes
-      if(gifPlace.value==='behind' && rightGif && rightGifReady){
-        p.push(); p.tint(255, Math.floor(parseFloat(gifAlpha.value)*255));
-        const s=parseFloat(gifScale.value); const gw=rightW*s, gh=rightH*s; const gx=rightX+(rightW-gw)/2, gy=(rightH-gh)/2; p.image(rightGif, gx, gy, gw, gh); p.pop();
-      }
-
-      // stripes + dots + wave
-      pathLineDraw(); ellipseMoving(); waveLineDraw();
-
-      // OPTIONAL: draw GIF in front of stripes
-      if(gifPlace.value==='front' && rightGif && rightGifReady){
-        p.push(); p.tint(255, Math.floor(parseFloat(gifAlpha.value)*255));
-        const s=parseFloat(gifScale.value); const gw=rightW*s, gh=rightH*s; const gx=rightX+(rightW-gw)/2, gy=(rightH-gh)/2; p.image(rightGif, gx, gy, gw, gh); p.pop();
-      }
+      // right visuals & motion
+      pathLineDraw();
+      ellipseMoving();
+      waveLineDraw();
 
       // boundary markers
-      p.noStroke(); p.fill(220,220,220,180); for(let i=0;i<lineNum;i++){ p.circle(startPostion-6,(i+0.5)*H/lineNum,6); }
+      p.noStroke(); p.fill(220,220,220,180);
+      for(let i=0;i<lineNum;i++){ p.circle(startPostion-6, (i+0.5)*H/lineNum, 6); }
 
-      // HUD
-      p.fill(255,150); p.textSize(12); p.text(`thr:${mthr.value} spd:${speed.value} vol:${volSlider.value} bpm:${bpmSlider.value}`, 10, 16);
+      // HUD (fixed template string)
+      p.fill(255,150); p.textSize(12);
+      p.text(thr:${mthr.value} spd:${speed.value}, 10, 16);
     };
 
     btnSnap.addEventListener('click', ()=>{ p.saveCanvas('scanseq_snapshot', 'png'); });
-
-    // expose lane trigger for grooves
-    window.__laneTrigger = (i, time)=>{ if(i<0||i>=lineNum) return; linesXPos[i]=startPostion; linesMovSpeed[i]=5+parseInt(speed.value,10)*0.8; linesTrigger[i]=true; linesToneTrigger[i]=false; waveMoving[i]=true; if(started&&polySynth){ const base=noteListWhole[19-i]; triggerNotes(base, time);} };
   };
 
-  // start sketch
   window.onload = () => new p5(sketch);
 })();
 </script>
