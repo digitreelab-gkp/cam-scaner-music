@@ -25,7 +25,7 @@ This lightweight web app uses **p5.js** and **Tone.js** to track your fingers in
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/digitreelab-gkp/cam-scaner-music.git
+git clone https://github.com/digitreelab-gkp/Hand-Motion-Music.git
 cd hand-motion-music
 ```
 
