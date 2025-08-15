@@ -25,7 +25,7 @@ This lightweight web app uses **p5.js** and **Tone.js** to track your fingers in
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/Digitree-Labs/hand-motion-music.git
+git clone https://github.com/digitreelab-gkp/cam-scaner-music.git
 cd hand-motion-music
 ```
 
@@ -45,7 +45,7 @@ Just open `index.html` in your browser — **no server needed**.
 ---
 
 ## 🎯 Demo
-[🔗 Live Demo](https://digitree-labs.github.io/hand-motion-music/) *(example link — replace with your actual demo)*
+[🔗 Live Demo](https://scaner-music.vercel.app/) *(example link — replace with your actual demo)*
 
 ---
 
